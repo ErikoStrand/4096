@@ -16,7 +16,8 @@ TILES = []
 SQUARES = []
 display = pygame.display.set_mode((WIDTH, HEIGHT + 100))
 print(TILE_SIZE)
-
+board = np.zeros((GRID, GRID), dtype=classmethod)
+print(board)
 class Tile:
     def __init__(self, x, y, tileSize, display, tileColor, outlineColor):
         self.x = x
@@ -31,44 +32,81 @@ class Tile:
         pygame.draw.rect(self.display, self.outlineColor, (self.x * self.tileSize, self.y * self.tileSize, self.tileSize, self.tileSize), 6)
         
 class Squares:
-    def __init__(self, x, y, tileSize, display):
-        self.x: int = x
-        self.y: int = y
+    def __init__(self, x, y, tileSize, display, value):
+        self.location: tuple = pygame.Vector2(x, y)
         self.tileSize: int = tileSize
         self.display: pygame.surface = display  
         self.direction: tuple = pygame.Vector2(0, 0)  
-        self.moving: bool = False    
+        self.moving: bool = False
+        self.rect = pygame.Rect(self.location[0] * self.tileSize, self.location[1] * self.tileSize, self.tileSize, self.tileSize)    
+        self.value: int = value
         
-    def update(self, dt, event):  
-        if not self.moving: 
+    def update(self, dt, event, Board):  
+        if not self.moving:
+            self.direction: tuple = pygame.Vector2(0, 0)  
             if event.type == pygame.TEXTINPUT:
                 self.moving = True
                 if event.text == "w":
-                    self.direction.y = 1
+                    self.direction.y = -1
                 if event.text == "a":
                     self.direction.x = -1
                 if event.text == "s":
-                    self.direction.y = -1
+                    self.direction.y = 1
                 if event.text == "d":
-                    self.direction.x = 1    
+                    self.direction.x = 1
+                    
+        if self.moving:
+            self.location[0] = self.location[0] + self.direction[0]
+            self.location[1] = self.location[1] + self.direction[1]       
+            if self.location[0] > 3:
+                self.location[0] = 3
+                self.moving = False
+            if self.location[0] < 0:
+                self.location[0] = 0
+                self.moving = False
+            if self.location[1] < 0:
+                self.location[1] = 0
+                self.moving = False
+            if self.location[1] > 3:
+                self.location[1] = 3
+                self.moving = False
+
+        self.rect = pygame.Rect(self.location[0] * self.tileSize, self.location[1] * self.tileSize, self.tileSize, self.tileSize)
+        print(Board)   
+                  
+    def drawSquare(self):
+        pygame.draw.rect(self.display, (100, 100, 100), self.rect)     
+        font = pygame.font.Font("bitlow.ttf", 100)
+        width, height = pygame.font.Font.size(font, str(self.value))
+        draw = font.render(str(self.value), False, (255, 255, 255))
+        display.blit(draw, (self.rect.x + width, self.rect.y + height/2)) 
         
+def drawInt(text, font_size, x, y, color):
+    font = pygame.font.Font("bitlow.ttf", font_size)
+    width, height = pygame.font.Font.size(font, str(text))
+    draw = font.render(str(text), False, color)
+    display.blit(draw, (x, y - height/2))    
+             
 def createTiles():
     for x in range(GRID):
         for y in range(GRID):
-            TILES.append(Tile(x, y, TILE_SIZE, display, TILE, OUTLINE))    
+            TILES.append(Tile(x, y, TILE_SIZE, display, TILE, OUTLINE))
             
 def newSquare():
     x = np.random.randint(0, 4)
-    y = np.random.randint(0, 4)       
+    y = np.random.randint(0, 4)  
+    if board[y][x] == 0:
+        board[y][x] = Squares(x, y, TILE_SIZE, display, np.random.choice([2, 4]))      
     for tile in TILES:
         if tile.x == x and tile.y == y:
             if tile.active:
                 newSquare()
             if not tile.active:
                 tile.active = True
-                SQUARES.append(Squares(x, y, TILE_SIZE, display)) 
+                SQUARES.append(Squares(x, y, TILE_SIZE, display, np.random.choice([2, 4]))) 
                 
 createTiles()
+newSquare()
 newSquare()
 while 1:
     dt = clock.tick(240) / 250
@@ -77,8 +115,17 @@ while 1:
         if event.type == pygame.QUIT:
             sys.exit()
             
-    for squares in SQUARES:
-        squares.update(dt, event)        
+    for square in SQUARES:
+        board[int(square.location[1])][int(square.location[0])] = square
+        for y in range(GRID):
+            for x in range(GRID):
+                if square.location[1] != y and square.location[0] != x:
+                    board[y][x] = 0
+                
+    for count, square in enumerate(SQUARES):
+        square.update(dt, event, board)        
+        square.drawSquare()
+                    
     for tile in TILES:
         tile.drawTile()
         
