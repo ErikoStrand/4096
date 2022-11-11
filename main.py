@@ -56,8 +56,8 @@ class Squares:
                     self.direction.x = 1
                     
         if self.moving:
-            self.location[0] = self.location[0] + self.direction[0]
-            self.location[1] = self.location[1] + self.direction[1]       
+            self.location[0] = self.location[0] + (dt * self.direction[0] * 2)
+            self.location[1] = self.location[1] + (dt * self.direction[1] * 2)       
             if self.location[0] > 3:
                 self.location[0] = 3
                 self.moving = False
@@ -93,18 +93,16 @@ def createTiles():
             TILES.append(Tile(x, y, TILE_SIZE, display, TILE, OUTLINE))
             
 def newSquare():
-    x = np.random.randint(0, 4)
-    y = np.random.randint(0, 4)  
-    if board[y][x] == 0:
-        board[y][x] = Squares(x, y, TILE_SIZE, display, np.random.choice([2, 4]))      
-    for tile in TILES:
-        if tile.x == x and tile.y == y:
-            if tile.active:
-                newSquare()
-            if not tile.active:
-                tile.active = True
+    while len(SQUARES) > 0:
+        x = np.random.randint(0, 4)
+        y = np.random.randint(0, 4)       
+        for square in SQUARES:
+            if square.location[0] != x and square.location[1] != y:
                 SQUARES.append(Squares(x, y, TILE_SIZE, display, np.random.choice([2, 4]))) 
-                
+                return
+    else:
+        SQUARES.append(Squares(1, 1, TILE_SIZE, display, np.random.choice([2, 4])))    
+        
 createTiles()
 newSquare()
 newSquare()
@@ -124,8 +122,8 @@ while 1:
                 
     for count, square in enumerate(SQUARES):
         square.update(dt, event, board)        
-        square.drawSquare()
-                    
+        square.drawSquare()      
+                
     for tile in TILES:
         tile.drawTile()
         
