@@ -37,28 +37,32 @@ class Blobs:
                 if event.text == "d":
                     self.direction.x = 1
                     
-        if self.moving:   
+        if self.moving: 
+            try:
+                if type(grid[int(self.location[1] + self.direction[1])][int(self.location[0] + self.direction[0])]) == int:
+                    print("yo")
+                    grid[int(self.location[1] + self.direction[1])][int(self.location[0] + self.direction[0])] = grid[int(self.location[1])][int(self.location[0])]
+                    grid[int(self.location[1])][int(self.location[0])] = 0
+                else:
+                    self.moving = False
+                    return grid
+            except Exception as e:
+                print(e)   
             self.location[0] = self.location[0] + self.direction[0]
             self.location[1] = self.location[1] + self.direction[1] 
-   
             if self.location[0] > 3:
                 self.location[0] = 3
                 self.moving = False
-            if self.location[0] < 0:
+            elif self.location[0] < 0:
                 self.location[0] = 0
                 self.moving = False
-            if self.location[1] < 0:
+            elif self.location[1] < 0:
                 self.location[1] = 0
                 self.moving = False
-            if self.location[1] > 3:
+            elif self.location[1] > 3:
                 self.location[1] = 3
                 self.moving = False
-            if self.moving:
-                try:
-                    grid[int(self.location[1] + self.direction[1])][int(self.location[0] + self.direction[0])] = grid[int(self.location[1])][int(self.location[0])]
-                    grid[int(self.location[1])][int(self.location[0])] = 2
-                except Exception as e:
-                    print(e)   
+        print(self.location)
         return grid        
     def drawBlob(self):
         pygame.draw.rect(display, (100, 100, 100), (self.location[0] * TILE_SIZE, self.location[1] * TILE_SIZE, TILE_SIZE, TILE_SIZE))   
