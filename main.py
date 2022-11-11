@@ -15,6 +15,7 @@ TILE_SIZE = int((WIDTH/GRID))
 BLOBS = []
 display = pygame.display.set_mode((WIDTH, HEIGHT + 100))
 board = np.zeros((GRID, GRID), dtype=classmethod)
+
 class Blobs:
     def __init__(self, x, y, value):
         self.location: tuple = pygame.Vector2(x, y)
@@ -22,7 +23,7 @@ class Blobs:
         self.value: int = value
         self.moving: bool = False
 
-    def update(self, event):  
+    def update(self, event, grid):
         if not self.moving:
             self.direction: tuple = pygame.Vector2(0, 0)  
             if event.type == pygame.TEXTINPUT:
@@ -36,9 +37,10 @@ class Blobs:
                 if event.text == "d":
                     self.direction.x = 1
                     
-        if self.moving:             
+        if self.moving:   
             self.location[0] = self.location[0] + self.direction[0]
-            self.location[1] = self.location[1] + self.direction[1]     
+            self.location[1] = self.location[1] + self.direction[1] 
+   
             if self.location[0] > 3:
                 self.location[0] = 3
                 self.moving = False
@@ -51,7 +53,13 @@ class Blobs:
             if self.location[1] > 3:
                 self.location[1] = 3
                 self.moving = False
-                
+            if self.moving:
+                try:
+                    grid[int(self.location[1] + self.direction[1])][int(self.location[0] + self.direction[0])] = grid[int(self.location[1])][int(self.location[0])]
+                    grid[int(self.location[1])][int(self.location[0])] = 2
+                except Exception as e:
+                    print(e)   
+        return grid        
     def drawBlob(self):
         pygame.draw.rect(display, (100, 100, 100), (self.location[0] * TILE_SIZE, self.location[1] * TILE_SIZE, TILE_SIZE, TILE_SIZE))   
          
@@ -76,8 +84,8 @@ while 1:
     #draw "blobs":
     for y in board:
         for x in y:
-            if x != 0:
-                x.update(event)
+            if type(x) != int:
+                board = x.update(event, board)
                 x.drawBlob()     
                
     display.fill(BACKGROUND, (0, WIDTH, WIDTH, 100))
