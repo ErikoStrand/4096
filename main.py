@@ -36,17 +36,7 @@ class Blobs:
                 if event.text == "d":
                     self.direction.x = 1
                     
-        if self.moving:
-            try:
-                if board[int(self.location[1] + self.direction[1])][int(self.location[0] + self.direction[0])] != 0:
-                    print("hey")
-                    self.moving = False
-                if board[int(self.location[1] + self.direction[1])][int(self.location[0] + self.direction[0])] == 0:
-                    board[int(self.location[1] + self.direction[1])][int(self.location[0] + self.direction[0])] = board[int(self.location[1])][int(self.location[0])]
-                    board[int(self.location[1])][int(self.location[0])] = 0
-            except Exception as e:
-                print(e)
-                    
+        if self.moving:             
             self.location[0] = self.location[0] + self.direction[0]
             self.location[1] = self.location[1] + self.direction[1]     
             if self.location[0] > 3:
@@ -62,7 +52,6 @@ class Blobs:
                 self.location[1] = 3
                 self.moving = False
                 
-        print(self.direction)
     def drawBlob(self):
         pygame.draw.rect(display, (100, 100, 100), (self.location[0] * TILE_SIZE, self.location[1] * TILE_SIZE, TILE_SIZE, TILE_SIZE))   
          
@@ -94,3 +83,4 @@ while 1:
     display.fill(BACKGROUND, (0, WIDTH, WIDTH, 100))
     drawGrid()        
     pygame.display.flip()
+    print(board)
