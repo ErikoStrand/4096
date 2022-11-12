@@ -15,39 +15,56 @@ TILE_SIZE = int((WIDTH/GRID))
 BLOBS = []
 display = pygame.display.set_mode((WIDTH, HEIGHT + 100))
 board = np.zeros((GRID, GRID), dtype=classmethod)
-
+DISALLOWED = [-1, 4]
+def drawTime(text, font_size, x, y, color, tileSize, combine):
+    font = pygame.font.Font("bitlow.ttf", font_size)
+    text = font.render(str(text), True, color)
+    text_rect = text.get_rect(center=(x + tileSize/2, y + tileSize/2))
+    display.blit(text, text_rect)
+    
 class Blobs:
     def __init__(self, x, y, value):
         self.location: tuple = pygame.Vector2(x, y)
         self.direction: tuple = pygame.Vector2(0, 0)
         self.value: int = value
         self.moving: bool = False
+        self.move: bool = True
+        self.combines: int = 1
 
-    def update(self, event, grid):
+    def update(self, event, grid):       
         if not self.moving:
             self.direction: tuple = pygame.Vector2(0, 0)  
             if event.type == pygame.TEXTINPUT:
                 self.moving = True
                 if event.text == "w":
                     self.direction.y = -1
-                if event.text == "a":
+                    self.move = False
+                    
+                elif event.text == "a":
                     self.direction.x = -1
-                if event.text == "s":
+                    self.move = False
+                    
+                elif event.text == "s":
                     self.direction.y = 1
-                if event.text == "d":
+                    self.move = False
+                    
+                elif event.text == "d":
                     self.direction.x = 1
+                    self.move = False
                     
         if self.moving: 
-            try:
+            if int(self.location[1] + self.direction[1]) not in DISALLOWED and int(self.location[0] + self.direction[0]) not in DISALLOWED:
                 if type(grid[int(self.location[1] + self.direction[1])][int(self.location[0] + self.direction[0])]) == int:
-                    print("yo")
                     grid[int(self.location[1] + self.direction[1])][int(self.location[0] + self.direction[0])] = grid[int(self.location[1])][int(self.location[0])]
                     grid[int(self.location[1])][int(self.location[0])] = 0
                 else:
+                    if grid[int(self.location[1] + self.direction[1])][int(self.location[0] + self.direction[0])].value == grid[int(self.location[1])][int(self.location[0])].value:
+                        grid[int(self.location[1] + self.direction[1])][int(self.location[0] + self.direction[0])].value += grid[int(self.location[1])][int(self.location[0])].value
+                        grid[int(self.location[1])][int(self.location[0])] = 0
+                        self.combines += 1
                     self.moving = False
                     return grid
-            except Exception as e:
-                print(e)   
+
             self.location[0] = self.location[0] + self.direction[0]
             self.location[1] = self.location[1] + self.direction[1] 
             if self.location[0] > 3:
@@ -62,10 +79,12 @@ class Blobs:
             elif self.location[1] > 3:
                 self.location[1] = 3
                 self.moving = False
-        print(self.location)
+
         return grid        
+    
     def drawBlob(self):
-        pygame.draw.rect(display, (100, 100, 100), (self.location[0] * TILE_SIZE, self.location[1] * TILE_SIZE, TILE_SIZE, TILE_SIZE))   
+        pygame.draw.rect(display, (100, 100, 100), (self.location[0] * TILE_SIZE, self.location[1] * TILE_SIZE, TILE_SIZE, TILE_SIZE))
+        drawTime(self.value, 100, self.location[0] * TILE_SIZE, self.location[1] * TILE_SIZE, (255, 255, 255), TILE_SIZE, self.combines)   
          
 def drawGrid():
     for x in range(GRID):
@@ -76,14 +95,22 @@ def newBlob(amount):
     for _ in range(amount):
         x = np.random.randint(0, GRID)
         y = np.random.randint(0, GRID)
-        board[y][x] = Blobs(x, y, np.random.choice([2, 4]))
-
+        if board[y][x] == 0:
+            board[y][x] = Blobs(x, y, np.random.choice([2, 4]))
+        else:
+            if np.all(board) != 0:
+                print("oh shit")
+                return
+            newBlob(1)
 newBlob(1)
 while 1:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             sys.exit()
-            
+        if event.type == pygame.KEYDOWN:
+            if event.key in [pygame.K_w, pygame.K_s, pygame.K_a, pygame.K_d]:
+                newBlob(1)
+                
     display.fill(TILE, (0, 0, WIDTH, HEIGHT))
     #draw "blobs":
     for y in board:
@@ -95,4 +122,4 @@ while 1:
     display.fill(BACKGROUND, (0, WIDTH, WIDTH, 100))
     drawGrid()        
     pygame.display.flip()
-    print(board)
+   # print(board)
